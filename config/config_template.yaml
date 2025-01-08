@@ -6,3 +6,6 @@ environment:
     - name: new_variable
       type: string
       value: new string value
+    - name: proxy_server_port
+      type: int
+      value: "80"
