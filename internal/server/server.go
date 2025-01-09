@@ -15,19 +15,19 @@ import (
 	"go.redsock.ru/ruf/cyan-room/internal/config"
 )
 
-type server struct {
+type Server struct {
 	port string
 }
 
-func New(cfg config.Config) (*server, error) {
-	s := &server{
+func New(cfg config.Config) (*Server, error) {
+	s := &Server{
 		port: strconv.Itoa(cfg.Environment.ProxyServerPort),
 	}
 
 	return s, nil
 }
 
-func (s server) Start() error {
+func (s *Server) Start() error {
 	// Listen on a specific port
 	listener, err := net.Listen("tcp", "0.0.0.0:"+s.port)
 	if err != nil {
