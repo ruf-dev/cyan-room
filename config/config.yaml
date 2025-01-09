@@ -1,6 +1,6 @@
 app_info:
     name: github.com/Red-Sock/cyan-room
-    version: v0.0.2
+    version: v0.0.3
     startup_duration: 10s
 environment:
     - name: proxy_server_port
