@@ -5,36 +5,41 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
+	"strconv"
 
+	"github.com/sirupsen/logrus"
+	"go.redsock.ru/rerrors"
 	"golang.org/x/net/proxy"
 
 	"go.redsock.ru/ruf/cyan-room/internal/config"
 )
 
-type Server struct {
+type server struct {
 	port string
 }
 
-func New(cfg config.Config) (*Server, error) {
-	return nil, nil
+func New(cfg config.Config) (*server, error) {
+	s := &server{
+		port: strconv.Itoa(cfg.Environment.ProxyServerPort),
+	}
+
+	return s, nil
 }
 
-func (s Server) Start() {
-	port := ":18501"
+func (s server) Start() error {
 	// Listen on a specific port
-	listener, err := net.Listen("tcp", "0.0.0.0"+port)
+	listener, err := net.Listen("tcp", "0.0.0.0:"+s.port)
 	if err != nil {
-		log.Fatalf("Error starting the proxy server: %v", err)
+		return rerrors.Wrap(err, "Error starting the proxy server")
 	}
 	defer listener.Close()
-	log.Println("SOCKS5 Proxy server is running on port " + port)
+	logrus.Info("SOCKS5 Proxy server is running on port " + s.port)
 
 	for {
 		clientConn, err := listener.Accept()
 		if err != nil {
-			log.Printf("Failed to accept connection: %v", err)
+			logrus.Error("Failed to accept connection: %v", err)
 			continue
 		}
 
@@ -49,13 +54,13 @@ func handleConnection(clientConn net.Conn) {
 	dialer := proxy.FromEnvironment().Dial
 	targetAddr, err := parseClientRequest(clientConn)
 	if err != nil {
-		log.Printf("Error parsing target addr: %v", err)
+		logrus.Errorf("Error parsing target addr: %v", err)
 		return
 	}
 	// Forward traffic
 	target, err := dialer("tcp", targetAddr) // Example target server
 	if err != nil {
-		log.Printf("Error connecting to target: %v", err)
+		logrus.Errorf("Error connecting to target: %v", err)
 		return
 	}
 	defer target.Close()
