@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Release tag
         id: release
-        uses: RedSockActions/release_tag@v1.1.6
+        uses: RedSockActions/release_tag@v1.1.7
         with:
           token: ${{ github.token }}
     outputs:
@@ -24,7 +24,7 @@ jobs:
     steps:
       - name: Release image
         if: ${{ needs.tag-release.outputs.tag != '' }}
-        uses: RedSockActions/release_image@v1.0.19
+        uses: RedSockActions/release_image@v1.0.20
         with:
           REGISTRY_USER: ${{ vars.REGISTRY_USER }}
           REGISTRY_PWD:  ${{ secrets.REGISTRY_PWD }}
