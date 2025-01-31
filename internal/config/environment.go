@@ -3,6 +3,8 @@
 package config
 
 type EnvironmentConfig struct {
-	ProxyServerPort int
+	AllowedIps      []string
+	AllowedUsers    []string
 	NewVariable     string
+	ProxyServerPort int
 }

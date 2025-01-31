@@ -9,3 +9,9 @@ environment:
     - name: new_variable
       type: string
       value: new string value
+    - name: allowed_ips
+      type: string
+      value: [""]
+    - name: allowed_users
+      type: string
+      value: [""]
