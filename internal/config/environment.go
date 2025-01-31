@@ -4,4 +4,5 @@ package config
 
 type EnvironmentConfig struct {
 	ProxyServerPort int
+	NewVariable     string
 }

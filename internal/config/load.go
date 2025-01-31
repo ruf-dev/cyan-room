@@ -15,6 +15,7 @@ type Config struct {
 	AppInfo matreshka.AppInfo
 
 	Environment EnvironmentConfig
+	Overrides   matreshka.ServiceDiscovery
 }
 
 var defaultConfig Config
@@ -50,6 +51,7 @@ func Load() (Config, error) {
 	}
 
 	defaultConfig.AppInfo = rootConfig.AppInfo
+	defaultConfig.Overrides = rootConfig.ServiceDiscovery
 
 	err = rootConfig.Environment.ParseToStruct(&defaultConfig.Environment)
 	if err != nil {

@@ -5,4 +5,7 @@ app_info:
 environment:
     - name: proxy_server_port
       type: int
-      value: "80"
+      value: 80
+    - name: new_variable
+      type: string
+      value: new string value
