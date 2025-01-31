@@ -1,6 +1,6 @@
 app_info:
     name: github.com/Red-Sock/cyan-room
-    version: v0.0.3
+    version: v0.0.4
     startup_duration: 10s
 environment:
     - name: proxy_server_port
@@ -12,6 +12,3 @@ environment:
     - name: allowed_users
       type: string
       value: []
-    - name: new_variable
-      type: string
-      value: new string value

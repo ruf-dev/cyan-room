@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"strconv"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	"go.redsock.ru/rerrors"
@@ -15,25 +16,31 @@ import (
 	"go.redsock.ru/ruf/cyan-room/internal/config"
 )
 
-// Allowed users (username:password)
-var authUsers = map[string]string{
-	"user1": "password123",
-	"user2": "securepass",
-}
-
-// Whitelisted IPs
-var whitelistedIPs = map[string]bool{
-	"192.168.1.100": true, // Example internal IP
-	"203.0.113.42":  true, // Example public IP
-}
-
 type Server struct {
 	port string
+
+	allowedUsers map[string]string
+	allowedIps   map[string]struct{}
 }
 
 func New(cfg config.Config) (*Server, error) {
 	s := &Server{
-		port: strconv.Itoa(cfg.Environment.ProxyServerPort),
+		port:         strconv.Itoa(cfg.Environment.ProxyServerPort),
+		allowedUsers: make(map[string]string, len(cfg.Environment.AllowedUsers)),
+		allowedIps:   make(map[string]struct{}, len(cfg.Environment.AllowedIps)),
+	}
+
+	for _, ip := range cfg.Environment.AllowedIps {
+		s.allowedIps[ip] = struct{}{}
+	}
+
+	for _, userPass := range cfg.Environment.AllowedUsers {
+		up := strings.Split(userPass, ":")
+		if len(up) != 2 {
+			logrus.Warnf("invalid allowed user pass record. Expected to have user:pass format. Got %d times repeated symbol :", len(up)-1)
+		}
+
+		s.allowedUsers[up[0]] = up[1]
 	}
 
 	return s, nil
@@ -54,23 +61,23 @@ func (s *Server) Start() error {
 			continue
 		}
 
-		go handleConnection(clientConn)
+		go s.handleConnection(clientConn)
 	}
 }
 
-func handleConnection(clientConn net.Conn) {
+func (s *Server) handleConnection(clientConn net.Conn) {
 	defer clientConn.Close()
 
 	// Restrict access based on IP (optional)
-	clientIP, _, _ := net.SplitHostPort(clientConn.RemoteAddr().String())
-	if !whitelistedIPs[clientIP] {
-		logrus.Warnf("Blocked unauthorized IP: %s", clientIP)
-		clientConn.Close()
-		return
-	}
+	//clientIP, _, _ := net.SplitHostPort(clientConn.RemoteAddr().String())
+	//if _, ok := s.allowedIps[clientIP]; !ok {
+	//	logrus.Warnf("Blocked unauthorized IP: %s", clientIP)
+	//	clientConn.Close()
+	//	return
+	//}
 
 	// Authenticate user
-	if err := authenticateClient(clientConn); err != nil {
+	if err := s.authenticateClient(clientConn); err != nil {
 		logrus.Warnf("Authentication failed: %v", err)
 		clientConn.Close()
 		return
@@ -97,7 +104,7 @@ func handleConnection(clientConn net.Conn) {
 }
 
 // Authenticate client using username/password
-func authenticateClient(conn net.Conn) error {
+func (s *Server) authenticateClient(conn net.Conn) error {
 	buf := make([]byte, 2)
 	if _, err := conn.Read(buf); err != nil {
 		return err
@@ -132,7 +139,7 @@ func authenticateClient(conn net.Conn) error {
 	password := string(buf[3+ulen : 3+ulen+plen])
 
 	// Verify credentials
-	if storedPass, ok := authUsers[username]; !ok || storedPass != password {
+	if storedPass, ok := s.allowedUsers[username]; !ok || storedPass != password {
 		conn.Write([]byte{0x01, 0x01}) // Authentication failed
 		return errors.New("authentication failed")
 	}
